@@ -317,9 +317,10 @@ class MachCommands(CommandBase):
 
         cargo_binary = "cargo" + BIN_SUFFIX
 
+        opts += ["--manifest-path", self.servo_manifest()]
         status = call(
             [cargo_binary, "build"] + opts,
-            env=env, cwd=self.servo_crate(), verbose=verbose)
+            env=env, verbose=verbose)
         elapsed = time() - build_start
 
         # Do some additional things if the build succeeded
@@ -407,10 +408,8 @@ class MachCommands(CommandBase):
             # common dependencies with the same flags.
             opts += ["--", "-C", "link-args=-Xlinker -undefined -Xlinker dynamic_lookup"]
 
-        with cd(path.join("ports", "cef")):
-            ret = call(["cargo", "rustc"] + opts,
-                       env=env,
-                       verbose=verbose)
+        opts += ["--manifest-path", self.cef_manifest()]
+        ret = call(["cargo", "rustc"] + opts, env=env, verbose=verbose)
         elapsed = time() - build_start
 
         # Generate Desktop Notification if elapsed-time > some threshold value
@@ -448,13 +447,12 @@ class MachCommands(CommandBase):
             opts += ["-v"]
         if release:
             opts += ["--release"]
-
         if features:
             opts += ["--features", ' '.join(features)]
 
         build_start = time()
-        with cd(path.join("ports", "geckolib")):
-            ret = call(["cargo", "build"] + opts, env=env, verbose=verbose)
+        opts += ["--manifest-path", self.geckolib_manifest()]
+        ret = call(["cargo", "build"] + opts, env=env, verbose=verbose)
         elapsed = time() - build_start
 
         # Generate Desktop Notification if elapsed-time > some threshold value
